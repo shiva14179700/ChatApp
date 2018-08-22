@@ -31,4 +31,5 @@ dependencies {
     implementation 'com.quickblox:quickblox-android-sdk-core:3.3.0'
     implementation 'com.quickblox:quickblox-android-sdk-chat:3.3.0'
     implementation 'com.amulyakhare:com.amulyakhare.textdrawable:1.0.1'
+    implementation 'com.github.lguipeng:BubbleView:1.0.1'
 }
