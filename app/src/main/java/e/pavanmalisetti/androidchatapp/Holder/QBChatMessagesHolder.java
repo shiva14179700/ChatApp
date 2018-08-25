@@ -13,13 +13,11 @@ public class QBChatMessagesHolder {
     private HashMap<String,ArrayList<QBChatMessage>> qbChatMessageArray;
 
     public static synchronized QBChatMessagesHolder getInstance(){
-        QBChatMessagesHolder qbChatMessagesHolder;
         synchronized (QBChatMessagesHolder.class){
             if (instance==null)
                 instance=new QBChatMessagesHolder();
-            qbChatMessagesHolder=instance;
         }
-        return qbChatMessagesHolder;
+        return instance;
     }
 
     private QBChatMessagesHolder(){

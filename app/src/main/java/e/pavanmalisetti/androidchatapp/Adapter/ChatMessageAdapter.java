@@ -6,6 +6,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.github.library.bubbleview.BubbleTextView;
 import com.quickblox.chat.QBChatService;
@@ -28,7 +29,7 @@ public class ChatMessageAdapter extends BaseAdapter{
 
     @Override
     public int getCount() {
-        return qbChatMessages.size();
+           return qbChatMessages.size();
     }
 
     @Override
