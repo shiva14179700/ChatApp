@@ -14,9 +14,11 @@ import com.quickblox.auth.QBAuth;
 import com.quickblox.auth.session.BaseService;
 import com.quickblox.auth.session.QBSession;
 import com.quickblox.chat.QBChatService;
+import com.quickblox.chat.QBIncomingMessagesManager;
 import com.quickblox.chat.QBRestChatService;
 import com.quickblox.chat.QBSystemMessagesManager;
 import com.quickblox.chat.exception.QBChatException;
+import com.quickblox.chat.listeners.QBChatDialogMessageListener;
 import com.quickblox.chat.listeners.QBSystemMessageListener;
 import com.quickblox.chat.model.QBChatDialog;
 import com.quickblox.chat.model.QBChatMessage;
@@ -28,14 +30,17 @@ import com.quickblox.users.QBUsers;
 import com.quickblox.users.model.QBUser;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 import e.pavanmalisetti.androidchatapp.Adapter.ChatDialogsAdapters;
 import e.pavanmalisetti.androidchatapp.Adapter.ChatMessageAdapter;
 import e.pavanmalisetti.androidchatapp.Common.Common;
 import e.pavanmalisetti.androidchatapp.Holder.QBChatDialogHolder;
+import e.pavanmalisetti.androidchatapp.Holder.QBUnreadMessagesHolder;
 import e.pavanmalisetti.androidchatapp.Holder.QBUsersHolder;
 
-public class ChatDialogsActivity extends AppCompatActivity implements QBSystemMessageListener {
+public class ChatDialogsActivity extends AppCompatActivity implements QBSystemMessageListener,QBChatDialogMessageListener {
 
     FloatingActionButton floatingActionButton;
     ListView lstChatDialogs;
@@ -87,9 +92,32 @@ public class ChatDialogsActivity extends AppCompatActivity implements QBSystemMe
                 //put all dialogs to cache
                 QBChatDialogHolder.getInstance().putDialogs(qbChatDialogs);
 
-                ChatDialogsAdapters adapter =new ChatDialogsAdapters(getBaseContext(),qbChatDialogs);
-                lstChatDialogs.setAdapter(adapter);
-                adapter.notifyDataSetChanged();
+               //unread settings
+                Set<String> setIds=new HashSet<>();
+                for (QBChatDialog chatDialog:qbChatDialogs){
+                    setIds.add(chatDialog.getDialogId());
+                }
+
+                //get unread messages
+                QBRestChatService.getTotalUnreadMessagesCount(setIds, QBUnreadMessagesHolder.getInstance().getBundle())
+                        .performAsync(new QBEntityCallback<Integer>() {
+                            @Override
+                            public void onSuccess(Integer integer, Bundle bundle) {
+
+                                //save to cache
+                                QBUnreadMessagesHolder.getInstance().setBundle(bundle);
+
+                                //refresh list dialogs
+                                ChatDialogsAdapters adapter =new ChatDialogsAdapters(getBaseContext(),QBChatDialogHolder.getInstance().getAllChatDialogs());
+                                lstChatDialogs.setAdapter(adapter);
+                                adapter.notifyDataSetChanged();
+                            }
+
+                            @Override
+                            public void onError(QBResponseException e) {
+
+                            }
+                        });
             }
 
             @Override
@@ -141,6 +169,8 @@ public class ChatDialogsActivity extends AppCompatActivity implements QBSystemMe
                         QBSystemMessagesManager qbSystemMessagesManager=QBChatService.getInstance().getSystemMessagesManager();
                         qbSystemMessagesManager.addSystemMessageListener(ChatDialogsActivity.this);
 
+                        QBIncomingMessagesManager qbIncomingMessagesManager=QBChatService.getInstance().getIncomingMessagesManager();
+                        qbIncomingMessagesManager.addDialogMessageListener(ChatDialogsActivity.this);
                     }
 
                     @Override
@@ -183,5 +213,15 @@ public class ChatDialogsActivity extends AppCompatActivity implements QBSystemMe
     @Override
     public void processError(QBChatException e, QBChatMessage qbChatMessage) {
       Log.e("ERROR",""+e.getMessage());
+    }
+
+    @Override
+    public void processMessage(String s, QBChatMessage qbChatMessage, Integer integer) {
+        loadChatDialogs();
+    }
+
+    @Override
+    public void processError(String s, QBChatException e, QBChatMessage qbChatMessage, Integer integer) {
+
     }
 }

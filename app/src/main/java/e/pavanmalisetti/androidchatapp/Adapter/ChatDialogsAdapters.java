@@ -15,6 +15,7 @@ import com.quickblox.chat.model.QBChatDialog;
 
 import java.util.ArrayList;
 
+import e.pavanmalisetti.androidchatapp.Holder.QBUnreadMessagesHolder;
 import e.pavanmalisetti.androidchatapp.R;
 
 public class ChatDialogsAdapters extends BaseAdapter {
@@ -50,11 +51,12 @@ public class ChatDialogsAdapters extends BaseAdapter {
             view=inflater.inflate(R.layout.list_chat_dialog,null);
 
             TextView txtTitle,txtMessage;
-            ImageView imageView;
+            ImageView imageView,image_unread;
 
             txtMessage=(TextView)view.findViewById(R.id.list_chat_dialog_message);
             txtTitle=(TextView)view.findViewById(R.id.list_chat_dialog_title);
             imageView=(ImageView)view.findViewById(R.id.image_chatDialog);
+            image_unread=(ImageView)view.findViewById(R.id.image_unread);
 
             txtMessage.setText(qbChatDialogs.get(position).getLastMessage());
             txtTitle.setText(qbChatDialogs.get(position).getName());
@@ -71,6 +73,18 @@ public class ChatDialogsAdapters extends BaseAdapter {
             TextDrawable drawable=builder.build(txtTitle.getText().toString().substring(0,1).toUpperCase(),randomColor);
 
             imageView.setImageDrawable(drawable);
+
+            //set message unread count
+            TextDrawable.IBuilder unReadBuilder=TextDrawable.builder().beginConfig()
+                    .withBorder(4)
+                    .endConfig()
+                    .round();
+            int unread_count= QBUnreadMessagesHolder.getInstance().getBundle().getInt(qbChatDialogs.get(position).getDialogId());
+            if (unread_count>0){
+                TextDrawable unread_drawable=unReadBuilder.build(""+unread_count,Color.RED);
+                image_unread.setImageDrawable(unread_drawable);
+            }
+
         }
         return view;
     }
