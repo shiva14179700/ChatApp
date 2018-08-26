@@ -15,6 +15,9 @@ public class Common {
     public static final String UPDATE_REMOVE_MODE="remove";
     public static final String UPDATE_MODE="Mode";
 
+    //dialog avatar
+    public static  final int SELECT_PICTURE=7171;
+
     public static String createChatDialogName(List<Integer> qbUsers)
     {
         List<QBUser> qbUsers1= QBUsersHolder.getInstance().getUsersByIds(qbUsers);

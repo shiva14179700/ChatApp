@@ -27,6 +27,7 @@ dependencies {
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
 
     //Add library
+    implementation 'com.github.bhargavms:DotLoader:1.0.3'
     implementation 'com.android.support:design:26.+'
     implementation 'com.quickblox:quickblox-android-sdk-core:3.3.0'
     implementation 'com.quickblox:quickblox-android-sdk-chat:3.3.0'

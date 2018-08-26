@@ -15,7 +15,13 @@
         app:titleTextColor="@android:color/white"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
-    
+
+    <ImageView
+        android:id="@+id/user_avatar"
+        android:layout_gravity="center_horizontal"
+        android:src="@drawable/ic_user_light_theme"
+        android:layout_width="100dp"
+        android:layout_height="100dp" />
 
     <LinearLayout
         android:orientation="vertical"

@@ -12,6 +12,8 @@ import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
@@ -27,12 +29,14 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.amulyakhare.textdrawable.TextDrawable;
+import com.bhargavms.dotloader.DotLoader;
 import com.quickblox.chat.QBChatService;
 import com.quickblox.chat.QBIncomingMessagesManager;
 import com.quickblox.chat.QBRestChatService;
 import com.quickblox.chat.exception.QBChatException;
 import com.quickblox.chat.listeners.QBChatDialogMessageListener;
 import com.quickblox.chat.listeners.QBChatDialogParticipantListener;
+import com.quickblox.chat.listeners.QBChatDialogTypingListener;
 import com.quickblox.chat.model.QBChatDialog;
 import com.quickblox.chat.model.QBChatMessage;
 import com.quickblox.chat.model.QBDialogType;
@@ -86,8 +90,8 @@ public class ChatMessageActivity extends AppCompatActivity implements QBChatDial
     //Tool bar
     Toolbar toolbar;
 
-    //dialog avatar
-    static  final int SELECT_PICTURE=7171;
+    DotLoader dotLoader;
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -343,12 +347,12 @@ public class ChatMessageActivity extends AppCompatActivity implements QBChatDial
 
         qbChatDialog=(QBChatDialog)getIntent().getSerializableExtra(Common.DIALOG_EXTRA);
 
-        if (qbChatDialog.getPhoto()!=null){
+        if (qbChatDialog.getPhoto()!=null &&!qbChatDialog.getPhoto().equals("null")){
             QBContent.getFile(Integer.parseInt(qbChatDialog.getPhoto()))
                     .performAsync(new QBEntityCallback<QBFile>() {
                         @Override
                         public void onSuccess(QBFile qbFile, Bundle bundle) {
-                            String fileURL=qbFile.getPrivateUrl();
+                            String fileURL=qbFile.getPublicUrl();
                             Picasso.with(getBaseContext())
                                     .load(fileURL)
                                     .resize(50,50)
@@ -379,6 +383,9 @@ public class ChatMessageActivity extends AppCompatActivity implements QBChatDial
 
             }
         });
+
+        //add typing listener
+        registerTypingForChatDialog(qbChatDialog);
 
         //Add Join Group to enable group chat
         if(qbChatDialog.getType()== QBDialogType.PUBLIC_GROUP || qbChatDialog.getType()==QBDialogType.GROUP){
@@ -442,11 +449,60 @@ public class ChatMessageActivity extends AppCompatActivity implements QBChatDial
         setSupportActionBar(toolbar);
     }
 
+    private void registerTypingForChatDialog(QBChatDialog qbChatDialog) {
+        QBChatDialogTypingListener typingListener=new QBChatDialogTypingListener() {
+            @Override
+            public void processUserIsTyping(String dialogId, Integer integer) {
+              if (dotLoader.getVisibility()!=View.VISIBLE){
+                  dotLoader.setVisibility(View.VISIBLE);
+              }
+            }
+
+            @Override
+            public void processUserStopTyping(String dialogId, Integer integer) {
+              if (dotLoader.getVisibility()!=View.INVISIBLE){
+                  dotLoader.setVisibility(View.INVISIBLE);
+              }
+            }
+        };
+
+        qbChatDialog.addIsTypingListener(typingListener);
+    }
+
     private void initViews() {
 
+        dotLoader=(DotLoader)findViewById(R.id.dot_loader);
         lstChatMessages=(ListView)findViewById(R.id.list_of_message);
         submitButton=(ImageButton)findViewById(R.id.send_button);
         edtContent=(EditText)findViewById(R.id.edt_content);
+        edtContent.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                try {
+                    qbChatDialog.sendIsTypingNotification();
+                } catch (XMPPException e) {
+                    e.printStackTrace();
+                } catch (SmackException.NotConnectedException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                try {
+                    qbChatDialog.sendStopTypingNotification();
+                } catch (XMPPException e) {
+                    e.printStackTrace();
+                } catch (SmackException.NotConnectedException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
 
         img_online_count=(ImageView)findViewById(R.id.img_online_count);
         txt_online_count=(TextView)findViewById(R.id.txt_online_count);
@@ -459,7 +515,7 @@ public class ChatMessageActivity extends AppCompatActivity implements QBChatDial
                 Intent selectImage=new Intent();
                 selectImage.setType("image/*");
                 selectImage.setAction(Intent.ACTION_GET_CONTENT);
-                startActivityForResult(Intent.createChooser(selectImage,"Select picture"),SELECT_PICTURE);
+                startActivityForResult(Intent.createChooser(selectImage,"Select picture"),Common.SELECT_PICTURE);
             }
         });
 
@@ -474,7 +530,7 @@ public class ChatMessageActivity extends AppCompatActivity implements QBChatDial
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode==RESULT_OK){
-            if (requestCode==SELECT_PICTURE){
+            if (requestCode==Common.SELECT_PICTURE){
                 Uri selectedImageUri=data.getData();
                 final ProgressDialog mDialog=new ProgressDialog(ChatMessageActivity.this);
                 mDialog.setMessage("Please wait..");
