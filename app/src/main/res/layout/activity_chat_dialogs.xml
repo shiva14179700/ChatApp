@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.design.widget.CoordinatorLayout
+<RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -7,7 +7,18 @@
     android:layout_height="match_parent"
     tools:context=".ChatDialogsActivity">
 
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/chat_dialog_toolbar"
+        android:minHeight="?attr/actionBarSize"
+        android:background="?attr/colorPrimary"
+        app:titleTextColor="@android:color/white"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+    </android.support.v7.widget.Toolbar>
+
     <ListView
+        android:layout_below="@+id/chat_dialog_toolbar"
         android:id="@+id/lstChatDialogs"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
@@ -16,7 +27,8 @@
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/chatdialog_adduser"
-        android:layout_gravity="bottom|right"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
         android:backgroundTint="@color/colorPrimaryDark"
         android:layout_margin="16dp"
         android:src="@drawable/ic_add"
@@ -25,4 +37,4 @@
         app:layout_anchor="@id/lstChatDialogs"
         app:layout_anchorGravity="bottom|right|end"/>
 
-</android.support.design.widget.CoordinatorLayout>
+</RelativeLayout>

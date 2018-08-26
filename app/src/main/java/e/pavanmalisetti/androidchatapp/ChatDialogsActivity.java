@@ -6,9 +6,12 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.support.v7.widget.Toolbar;
 
 import com.quickblox.auth.QBAuth;
 import com.quickblox.auth.session.BaseService;
@@ -52,9 +55,37 @@ public class ChatDialogsActivity extends AppCompatActivity implements QBSystemMe
     }
 
     @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.chat_dialog_menu,menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()){
+            case R.id.chat_dialog_menu_user:
+                showUserProfile();
+                break;
+            default:
+                break;
+        }
+        return true;
+    }
+
+    private void showUserProfile() {
+        Intent intent=new Intent(ChatDialogsActivity.this,UserProfile.class);
+        startActivity(intent);
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat_dialogs);
+
+        //add toolbar
+        Toolbar toolbar=(Toolbar)findViewById(R.id.chat_dialog_toolbar);
+        toolbar.setTitle("Chat App");
+        setSupportActionBar(toolbar);
 
         createSessionForChat();
 
