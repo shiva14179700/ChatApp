@@ -59,4 +59,8 @@ public class QBChatDialogHolder {
         return qbChat;
     }
 
+    public void removeDialog(String id){
+        qbChatDialogHashMap.remove(id);
+    }
+
 }
