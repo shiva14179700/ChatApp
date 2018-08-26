@@ -1,10 +1,16 @@
 package e.pavanmalisetti.androidchatapp;
 
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.ContextMenu;
+import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
@@ -21,6 +27,7 @@ import com.quickblox.chat.listeners.QBChatDialogMessageListener;
 import com.quickblox.chat.model.QBChatDialog;
 import com.quickblox.chat.model.QBChatMessage;
 import com.quickblox.chat.model.QBDialogType;
+import com.quickblox.chat.request.QBDialogRequestBuilder;
 import com.quickblox.chat.request.QBMessageGetBuilder;
 import com.quickblox.chat.request.QBMessageUpdateBuilder;
 import com.quickblox.core.QBEntityCallback;
@@ -30,6 +37,7 @@ import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smackx.muc.DiscussionHistory;
 
 import java.util.ArrayList;
+import java.util.zip.Inflater;
 
 import e.pavanmalisetti.androidchatapp.Adapter.ChatMessageAdapter;
 import e.pavanmalisetti.androidchatapp.Common.Common;
@@ -48,6 +56,96 @@ public class ChatMessageActivity extends AppCompatActivity implements QBChatDial
     int ContextMenuIndexClicked=-1;
     boolean isEditMode=false;
     QBChatMessage editMessage;
+
+    //Tool bar
+    Toolbar toolbar;
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        if (qbChatDialog.getType()==QBDialogType.GROUP||qbChatDialog.getType()==QBDialogType.PUBLIC_GROUP){
+            getMenuInflater().inflate(R.menu.chat_message_group_menu,menu);
+        }
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()){
+            case R.id.chat_group_edit_name:
+                editGroupName();
+                break;
+            case R.id.chat_group_add_user:
+                addUser();
+                break;
+            case R.id.chat_group_remove_user:
+                removeUser();
+                break;
+            default:
+                break;
+        }
+        return true;
+    }
+
+    private void removeUser() {
+
+        Intent intent=new Intent(ChatMessageActivity.this,ListUsersActivity.class);
+        intent.putExtra(Common.UPDATE_DIALOG_EXTRA,qbChatDialog);
+        intent.putExtra(Common.UPDATE_MODE,Common.UPDATE_REMOVE_MODE);
+        startActivity(intent);
+    }
+
+    private void addUser() {
+
+        Intent intent=new Intent(ChatMessageActivity.this,ListUsersActivity.class);
+        intent.putExtra(Common.UPDATE_DIALOG_EXTRA,qbChatDialog);
+        intent.putExtra(Common.UPDATE_MODE,Common.UPDATE_ADD_MODE);
+        startActivity(intent);
+
+    }
+
+    private void editGroupName() {
+        LayoutInflater inflater=LayoutInflater.from(this);
+        View view= inflater.inflate(R.layout.dialog_edit_group_layout,null);
+
+        AlertDialog.Builder alertDialogBuilder=new AlertDialog.Builder(this);
+        alertDialogBuilder.setView(view);
+        final EditText newName=(EditText)view.findViewById(R.id.edt_new_group_name);
+
+        //set dialog message
+        alertDialogBuilder.setCancelable(false)
+                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        qbChatDialog.setName(newName.getText().toString()); //set new name for dialog object
+
+                        QBDialogRequestBuilder requestBuilder=new QBDialogRequestBuilder();
+
+                        QBRestChatService.updateGroupChatDialog(qbChatDialog,requestBuilder)
+                                .performAsync(new QBEntityCallback<QBChatDialog>() {
+                                    @Override
+                                    public void onSuccess(QBChatDialog qbChatDialog, Bundle bundle) {
+                                        Toast.makeText(ChatMessageActivity.this, "Group Name Edited successfully", Toast.LENGTH_SHORT).show();
+                                        toolbar.setTitle(qbChatDialog.getName());
+                                    }
+
+                                    @Override
+                                    public void onError(QBResponseException e) {
+                                        Toast.makeText(ChatMessageActivity.this, ""+e.getMessage(), Toast.LENGTH_SHORT).show();
+                                    }
+                                });
+                    }
+                })
+                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+            }
+        });
+
+        //create alert dialog
+        AlertDialog alertDialog=alertDialogBuilder.create();
+        alertDialog.show();
+    }
 
     @Override
     public boolean onContextItemSelected(MenuItem item) {
@@ -244,9 +342,14 @@ public class ChatMessageActivity extends AppCompatActivity implements QBChatDial
                   Log.d("ERROR",""+e.getMessage());
                 }
             });
+
         }
 
         qbChatDialog.addMessageListener(this);
+
+        //set title for toolbar
+        toolbar.setTitle(qbChatDialog.getName());
+        setSupportActionBar(toolbar);
     }
 
     private void initViews() {
@@ -257,6 +360,10 @@ public class ChatMessageActivity extends AppCompatActivity implements QBChatDial
 
         //Add context Menu
         registerForContextMenu(lstChatMessages);
+
+        //Add Tool Bar
+        toolbar=(Toolbar)findViewById(R.id.chat_message_toolbar);
+
     }
 
     @Override

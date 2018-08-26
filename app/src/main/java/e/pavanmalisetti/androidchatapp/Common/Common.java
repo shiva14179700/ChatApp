@@ -10,6 +10,11 @@ public class Common {
 
     public static final String DIALOG_EXTRA="Dialogs";
 
+    public static final String UPDATE_DIALOG_EXTRA="ChatDialogs";
+    public static final String UPDATE_ADD_MODE="add";
+    public static final String UPDATE_REMOVE_MODE="remove";
+    public static final String UPDATE_MODE="Mode";
+
     public static String createChatDialogName(List<Integer> qbUsers)
     {
         List<QBUser> qbUsers1= QBUsersHolder.getInstance().getUsersByIds(qbUsers);
