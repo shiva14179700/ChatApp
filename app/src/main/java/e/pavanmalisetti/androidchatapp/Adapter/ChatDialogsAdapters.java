@@ -2,6 +2,8 @@ package e.pavanmalisetti.androidchatapp.Adapter;
 
 import android.content.Context;
 import android.graphics.Color;
+import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -12,6 +14,11 @@ import android.widget.TextView;
 import com.amulyakhare.textdrawable.TextDrawable;
 import com.amulyakhare.textdrawable.util.ColorGenerator;
 import com.quickblox.chat.model.QBChatDialog;
+import com.quickblox.content.QBContent;
+import com.quickblox.content.model.QBFile;
+import com.quickblox.core.QBEntityCallback;
+import com.quickblox.core.exception.QBResponseException;
+import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 
@@ -51,7 +58,7 @@ public class ChatDialogsAdapters extends BaseAdapter {
             view=inflater.inflate(R.layout.list_chat_dialog,null);
 
             TextView txtTitle,txtMessage;
-            ImageView imageView,image_unread;
+            final ImageView imageView,image_unread;
 
             txtMessage=(TextView)view.findViewById(R.id.list_chat_dialog_message);
             txtTitle=(TextView)view.findViewById(R.id.list_chat_dialog_title);
@@ -64,15 +71,36 @@ public class ChatDialogsAdapters extends BaseAdapter {
             ColorGenerator generator=ColorGenerator.MATERIAL;
             int randomColor=generator.getRandomColor();
 
-            TextDrawable.IBuilder builder=TextDrawable.builder().beginConfig()
-                    .withBorder(4)
-                    .endConfig()
-                    .round();
+            if (qbChatDialogs.get(position).getPhoto().equals("null")) {
+                TextDrawable.IBuilder builder = TextDrawable.builder().beginConfig()
+                        .withBorder(4)
+                        .endConfig()
+                        .round();
 
-            //get first character from chat Dialog title for create chat dialog image
-            TextDrawable drawable=builder.build(txtTitle.getText().toString().substring(0,1).toUpperCase(),randomColor);
+                //get first character from chat Dialog title for create chat dialog image
+                TextDrawable drawable = builder.build(txtTitle.getText().toString().substring(0, 1).toUpperCase(), randomColor);
 
-            imageView.setImageDrawable(drawable);
+                imageView.setImageDrawable(drawable);
+            }else{
+                //Download bitmap from server and set profile pic for dialog
+                QBContent.getFile(Integer.parseInt(qbChatDialogs.get(position).getPhoto()))
+                        .performAsync(new QBEntityCallback<QBFile>() {
+                            @Override
+                            public void onSuccess(QBFile qbFile, Bundle bundle) {
+                                String fileURL=qbFile.getPrivateUrl();
+                                Picasso.with(context)
+                                        .load(fileURL)
+                                        .resize(50,50)
+                                        .centerCrop()
+                                        .into(imageView);
+                            }
+
+                            @Override
+                            public void onError(QBResponseException e) {
+                                Log.e("ERROR",""+e.getMessage());
+                            }
+                        });
+            }
 
             //set message unread count
             TextDrawable.IBuilder unReadBuilder=TextDrawable.builder().beginConfig()
